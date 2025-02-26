@@ -1,8 +1,6 @@
 <template>
     <v-container>
-      <v-card class="mx-auto my-5" max-width="600">
-        <v-card-title>Welcome to About</v-card-title>
-        <v-card-text>This is the About page using Vuetify and Vue Router.</v-card-text>
-      </v-card>
+        <h1>About Me</h1>
+        <p>I am learning Vue.js and Vuetify to build modern web applications.</p>
     </v-container>
   </template>

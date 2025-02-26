@@ -4,7 +4,16 @@ import App from './App.vue'
 import 'vuetify/styles'
 import * as components from 'vuetify/components'
 import router from './router'
-const vuetify = createVuetify({components})
+const vuetify = createVuetify({
+    theme:{
+        defaultTheme: 'light',
+        themes: {
+            light: { },
+            dark: {  }
+        }
+    },
+    components
+})
 
 
 const app = createApp(App);

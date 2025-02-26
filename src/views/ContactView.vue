@@ -1,8 +1,11 @@
 <template>
     <v-container>
-      <v-card class="mx-auto my-5" max-width="600">
-        <v-card-title>Welcome to Contact</v-card-title>
-        <v-card-text>This is the Contact page using Vuetify and Vue Router.</v-card-text>
-      </v-card>
+     <h1>Contact Me</h1>
+      <v-form>
+      <v-text-field label="Your Name"></v-text-field>
+      <v-text-field label="Your Email"></v-text-field>
+      <v-textarea label="Your Message"></v-textarea>
+      <v-btn color="primary">Send</v-btn>
+     </v-form>
     </v-container>
   </template>
