@@ -4,6 +4,9 @@ import App from './App.vue'
 import 'vuetify/styles'
 import * as components from 'vuetify/components'
 import router from './router'
+import '@mdi/font/css/materialdesignicons.css'
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from './firebaseConfig'
 const vuetify = createVuetify({
     theme:{
         defaultTheme: 'light',
@@ -12,11 +15,18 @@ const vuetify = createVuetify({
             dark: {  }
         }
     },
+    icons: {
+        defaultSet: 'mdi',
+    },
     components
 })
-
-
-const app = createApp(App);
-app.use(vuetify); // Register Vuetify
-app.use(router);  // Register Vue Router
-app.mount('#app'); // Mount the app
+let app;
+// Wait for Firebase to check user state before initializing the app
+onAuthStateChanged(auth, (user) => {
+    if (!app) {
+      app = createApp(App);
+      app.use(vuetify); // Register Vuetify
+      app.use(router);  // Register Vue Router
+      app.mount("#app"); // Mount the app
+    }
+  });
