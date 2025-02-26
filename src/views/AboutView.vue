@@ -1,6 +1,8 @@
 <template>
     <v-container>
-        <h1>About Page</h1>
-        <!-- <v-btn color="primary" @click="$router.push('/')">Go To Home Page</v-btn> -->
+      <v-card class="mx-auto my-5" max-width="600">
+        <v-card-title>Welcome to About</v-card-title>
+        <v-card-text>This is the About page using Vuetify and Vue Router.</v-card-text>
+      </v-card>
     </v-container>
-</template>
+  </template>
