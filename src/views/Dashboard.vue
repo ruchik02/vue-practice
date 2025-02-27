@@ -1,11 +1,11 @@
 <script>
-import { auth } from "@/firebaseConfig";
-import { signOut } from "firebase/auth";
+import { mapActions } from 'vuex';
+// import { auth } from '@/firebaseConfig';
 
 export default {
     data() {
         return {
-            user: auth.currentUser,
+            // user: auth.currentUser,
             drawer: false,
             links: [
                 { title: "Home", route: "/dashboard/home", icon: "mdi-home" },
@@ -31,9 +31,10 @@ export default {
         };
     },
     methods: {
-        async logout() {
+        ...mapActions(["signout"]),
+        async handleLogout() {
             try {
-                await signOut(auth);
+                await this.signout();
                 this.$router.push("/"); // Redirect to login after logout
             } catch (error) {
                 console.error("Logout Error:", error);
@@ -60,7 +61,7 @@ export default {
             <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
             <v-toolbar-title>Dashboard</v-toolbar-title>
             <v-spacer></v-spacer>
-            <v-btn @click="logout" variant="text">Logout</v-btn>
+            <v-btn @click="handleLogout" variant="text">Logout</v-btn>
         </v-app-bar>
         <v-main>
             <router-view />
