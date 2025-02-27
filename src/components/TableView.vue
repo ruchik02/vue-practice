@@ -5,6 +5,8 @@ export default {
     data() {
         return {
             search: "",
+            dialog: false, // Controls visibility of edit dialog
+            editedUser: { name: "", email: "", role: "" }, // Stores user being edited
             headers: [
                 { title: "Name", key: "name", sortable: true },
                 { title: "Email", key: "email", sortable: true },
@@ -12,32 +14,66 @@ export default {
                 { title: "Created At", key: "createdAt", sortable: true },
                 { title: "Actions", key: "actions", sortable: false },
             ],
-            users: [
-                { id: 1, name: "Alice", email: "alice@example.com", role: "Admin", createdAt: "2024-06-01" },
-                { id: 2, name: "Bob", email: "bob@example.com", role: "User", createdAt: "2024-06-05" },
-                { id: 3, name: "Charlie", email: "charlie@example.com", role: "Editor", createdAt: "2024-06-10" },
-                { id: 4, name: "David", email: "david@example.com", role: "User", createdAt: "2024-06-12" },
-                { id: 5, name: "Emma", email: "emma@example.com", role: "Admin", createdAt: "2024-06-14" },
-                { id: 6, name: "Frank", email: "frank@example.com", role: "Editor", createdAt: "2024-06-16" },
-                { id: 7, name: "Grace", email: "grace@example.com", role: "User", createdAt: "2024-06-18" },
-                { id: 8, name: "Hannah", email: "hannah@example.com", role: "Admin", createdAt: "2024-06-20" },
-                { id: 9, name: "Isaac", email: "isaac@example.com", role: "Editor", createdAt: "2024-06-22" },
-                { id: 10, name: "Jack", email: "jack@example.com", role: "User", createdAt: "2024-06-24" },
-                { id: 11, name: "Katherine", email: "katherine@example.com", role: "Admin", createdAt: "2024-06-26" },
-                { id: 12, name: "Liam", email: "liam@example.com", role: "Editor", createdAt: "2024-06-28" },
-                { id: 13, name: "Mia", email: "mia@example.com", role: "User", createdAt: "2024-06-30" },
-                { id: 14, name: "Noah", email: "noah@example.com", role: "Admin", createdAt: "2024-07-02" }
-            ],
+            users: [],
         }
     },
     methods: {
+        // fetch data from firestore
+        async fetchUsers() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                this.users = querySnapshot.docs.map(doc => {
+                    let userData = doc.data();
+                    return {
+                        id: doc.id,
+                        name: userData.name,
+                        email: userData.email,
+                        role: userData.role,
+                        createdAt: userData.createdAt
+                            ? new Date(userData.createdAt.seconds * 1000).toLocaleString()
+                            : "N/A" // Convert Firestore Timestamp to readable date
+                    };
+                });
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            }
+        },
         editUser(user) {
-            alert(`Edit User: ${user.name}`);
+            this.editedUser = { ...user };
+            this.dialog = true;
         },
-        deleteUser(user) {
-            alert(`Delete User: ${user.name}`);
+        // Save edited user to Firestore
+        async updateUser() {
+            if (!this.editedUser.id) return;
+
+            try {
+                const userRef = doc(db, "users", this.editedUser.id);
+                await updateDoc(userRef, {
+                    name: this.editedUser.name,
+                    email: this.editedUser.email,
+                    role: this.editedUser.role
+                });
+
+                // Close dialog and refresh list
+                this.dialog = false;
+                this.fetchUsers();
+            } catch (error) {
+                console.error("Error updating user:", error);
+            }
         },
+        // Delete user from Firestore
+        async deleteUser(user) {
+            try {
+                await deleteDoc(doc(db, "users", user.id));
+                this.fetchUsers();
+            } catch (error) {
+                console.error("Error deleting user:", error);
+            }
+        }
     },
+    mounted() {
+        this.fetchUsers();
+    }
 }
 </script>
 <template>
@@ -57,6 +93,21 @@ export default {
             </template>
         </v-data-table>
     </v-card>
+    <!-- edit container -->
+    <v-dialog v-model="dialog" max-width="500px">
+        <v-card>
+            <v-card-title>Edit User</v-card-title>
+            <v-card-text>
+                <v-text-field v-model="editedUser.name" label="Name"></v-text-field>
+                <v-text-field v-model="editedUser.email" label="Email"></v-text-field>
+                <v-text-field v-model="editedUser.role" label="Role"></v-text-field>
+            </v-card-text>
+            <v-card-actions>
+                <v-btn color="red" text @click="dialog = false">Cancel</v-btn>
+                <v-btn color="blue" text @click="updateUser">Save</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 <style scoped>
 .v-btn {
