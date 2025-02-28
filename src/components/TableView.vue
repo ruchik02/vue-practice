@@ -131,7 +131,8 @@ export default {
                 <v-icon left>mdi-plus</v-icon> Add User
             </v-btn>
         </v-card-title>
-        <v-data-table :headers="headers" :items="users" :search="search" :items-per-page="10" class="elevation-2">
+        <v-data-table :headers="headers" :items="users" :search="search" :items-per-page="10" class="elevation-2"
+            show-items-per-page>
             <template v-slot:item.actions="{ item }">
                 <v-btn size="small" icon color="blue" @click="editUser(item)">
                     <v-icon>mdi-pencil</v-icon>
@@ -149,8 +150,9 @@ export default {
             <v-card-text>
                 <v-form ref="userForm">
                     <v-text-field v-model="editedUser.name" label="Name" :rules="[rules.required]"></v-text-field>
-                    <v-text-field v-model="editedUser.email" label="Email"  :rules="[rules.required, rules.email]"></v-text-field>
-                    <v-text-field v-model="editedUser.role" label="Role" :rules="[rules.required]"></v-text-field >
+                    <v-text-field v-model="editedUser.email" label="Email"
+                        :rules="[rules.required, rules.email]"></v-text-field>
+                    <v-text-field v-model="editedUser.role" label="Role" :rules="[rules.required]"></v-text-field>
                 </v-form>
             </v-card-text>
             <v-card-actions>
