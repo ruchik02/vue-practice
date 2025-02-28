@@ -1,15 +1,9 @@
 <script>
 import { mapActions } from 'vuex';
-import Home from './Home.vue';
-// import { auth } from '@/firebaseConfig';
 
 export default {
-    components: {
-        Home,
-    },
     data() {
         return {
-            // user: auth.currentUser,
             drawer: false,
             links: [
                 { title: "Home", route: "/dashboard", icon: "mdi-home" },
@@ -68,7 +62,6 @@ export default {
             <v-btn @click="handleLogout" variant="text">Logout</v-btn>
         </v-app-bar>
         <v-main>
-            <Home/>
             <router-view />
             <!-- This will load child components -->
         </v-main>

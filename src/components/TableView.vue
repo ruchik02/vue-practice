@@ -1,12 +1,19 @@
 <script>
 import { db } from '@/firebaseConfig';
-import { collection, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 export default {
     data() {
         return {
             search: "",
             dialog: false, // Controls visibility of edit dialog
+            isEditing: false,
             editedUser: { name: "", email: "", role: "" }, // Stores user being edited
+            originalUser: null, // Store original data for comparison
+            valid: false,
+            rules: {
+                required: value => !!value || "This field is required",
+                email: value => /.+@.+\..+/.test(value) || "E-mail must be valid",
+            },
             headers: [
                 { title: "Name", key: "name", sortable: true },
                 { title: "Email", key: "email", sortable: true },
@@ -15,6 +22,19 @@ export default {
                 { title: "Actions", key: "actions", sortable: false },
             ],
             users: [],
+        }
+    },
+    computed: {
+        isFormValid() {
+            return (
+                this.editedUser.name.trim() !== "" &&
+                this.editedUser.email.trim() !== "" &&
+                /.+@.+\..+/.test(this.editedUser.email) &&
+                this.editedUser.role.trim() !== ""
+            );
+        },
+        isEdited() {
+            return JSON.stringify(this.originalUser) !== JSON.stringify(this.editedUser);
         }
     },
     methods: {
@@ -38,13 +58,22 @@ export default {
                 console.error("Error fetching users:", error);
             }
         },
+        // Open dialog for adding a new user
+        openAddUserDialog() {
+            this.isEditing = false;
+            this.editedUser = { name: "", email: "", role: "" };
+            this.dialog = true;
+        },
+        // Open dialog for editing an existing user
         editUser(user) {
+            this.isEditing = true;
             this.editedUser = { ...user };
+            this.originalUser = { ...user }; // Store original user data for comparison
             this.dialog = true;
         },
         // Save edited user to Firestore
         async updateUser() {
-            if (!this.editedUser.id) return;
+            if (!this.$refs.userForm.validate()) return; // Validate form before submitting
 
             try {
                 const userRef = doc(db, "users", this.editedUser.id);
@@ -54,11 +83,28 @@ export default {
                     role: this.editedUser.role
                 });
 
-                // Close dialog and refresh list
                 this.dialog = false;
                 this.fetchUsers();
             } catch (error) {
                 console.error("Error updating user:", error);
+            }
+        },
+        // Add new user to Firestore
+        async addUser() {
+            if (!this.$refs.userForm.validate()) return; // Validate form before submitting
+
+            try {
+                await addDoc(collection(db, "users"), {
+                    name: this.editedUser.name,
+                    email: this.editedUser.email,
+                    role: this.editedUser.role,
+                    createdAt: new Date() // Store the created timestamp
+                });
+
+                this.dialog = false;
+                this.fetchUsers();
+            } catch (error) {
+                console.error("Error adding user:", error);
             }
         },
         // Delete user from Firestore
@@ -69,7 +115,7 @@ export default {
             } catch (error) {
                 console.error("Error deleting user:", error);
             }
-        }
+        },
     },
     mounted() {
         this.fetchUsers();
@@ -81,6 +127,9 @@ export default {
         <v-card-title class="d-flex justify-space-between">
             <v-text-field v-model="search" label="Search users..." prepend-inner-icon="mdi-magnify" variant="outlined"
                 density="compact"></v-text-field>
+            <v-btn color="green" @click="openAddUserDialog">
+                <v-icon left>mdi-plus</v-icon> Add User
+            </v-btn>
         </v-card-title>
         <v-data-table :headers="headers" :items="users" :search="search" :items-per-page="10" class="elevation-2">
             <template v-slot:item.actions="{ item }">
@@ -96,15 +145,20 @@ export default {
     <!-- edit container -->
     <v-dialog v-model="dialog" max-width="500px">
         <v-card>
-            <v-card-title>Edit User</v-card-title>
+            <v-card-title>{{ isEditing ? "Edit User" : "Add User" }}</v-card-title>
             <v-card-text>
-                <v-text-field v-model="editedUser.name" label="Name"></v-text-field>
-                <v-text-field v-model="editedUser.email" label="Email"></v-text-field>
-                <v-text-field v-model="editedUser.role" label="Role"></v-text-field>
+                <v-form ref="userForm">
+                    <v-text-field v-model="editedUser.name" label="Name" :rules="[rules.required]"></v-text-field>
+                    <v-text-field v-model="editedUser.email" label="Email"  :rules="[rules.required, rules.email]"></v-text-field>
+                    <v-text-field v-model="editedUser.role" label="Role" :rules="[rules.required]"></v-text-field >
+                </v-form>
             </v-card-text>
             <v-card-actions>
                 <v-btn color="red" text @click="dialog = false">Cancel</v-btn>
-                <v-btn color="blue" text @click="updateUser">Save</v-btn>
+                <v-btn :disabled="isEditing ? !isEdited : !isFormValid" color="blue" text
+                    @click="isEditing ? updateUser() : addUser()">
+                    {{ isEditing ? "Save Changes" : "Add User" }}
+                </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

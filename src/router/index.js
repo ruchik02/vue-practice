@@ -25,6 +25,7 @@ const routes = [
   {
     path: "/dashboard",
     component: Dashboard,
+    redirect: "/dashboard/home",
     meta: { requiresAuth: true }, // Protect Route
     children: [
         { path: "home", component: Home },

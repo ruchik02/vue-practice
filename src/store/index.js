@@ -1,19 +1,21 @@
 import { createStore } from "vuex";
 import { auth } from "@/firebaseConfig";
-import createPersistedState from "vuex-persistedstate";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "firebase/auth";
 const store = createStore({
   state: {
     user: null, // store user state
+    isAuthChecked: false, // Firebase auth state is checked before loading app
 
   },
   mutations: {
     setUser(state,user){
         state.user = user;
+        state.isAuthChecked = true;
 
     },
     clearUser(state){
         state.user = null;
+        state.isAuthChecked = true;
     }
 
   },
@@ -39,20 +41,22 @@ const store = createStore({
         await signOut(auth);
         commit("clearUser");
     },
-    fetchUser({commit}){
-        onAuthStateChanged(auth, (user) => {
-            if(user){
-                commit("setUser", user);
+    fetchUser({ commit }) {
+        return new Promise((resolve) => {
+          onAuthStateChanged(auth, (user) => {
+            if (user) {
+              commit("setUser", user);
             } else {
-                commit("clearUser");
+              commit("clearUser");
             }
-        })
-    }
+            resolve(); // the app waits for Firebase state check before mounting
+          });
+        });
+      },
   },
   getters: {
     getUser: (state) => state.user,
     isAuthenticated: (state) => !!state.user
   },
-  plugins: [createPersistedState()],
 })
 export default store;
